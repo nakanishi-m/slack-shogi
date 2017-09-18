@@ -1,1 +1,1 @@
-pbot: python main.py
+slackbot: python main.py
