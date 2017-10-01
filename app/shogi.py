@@ -10,7 +10,8 @@ from app.slack_utils.user import User
 from app.helper import channel_info, should_exist_shogi
 
 
-@respond_to('start with <?@?([\d\w_-]+)>?')
+@respond_to('([\d\w_-]+) と始める')
+@respond_to('start with ([\d\w_-]+)')
 @channel_info
 def start_shogi(channel, message, opponent_name):
     slacker = message._client.webapi
@@ -42,6 +43,7 @@ def start_shogi(channel, message, opponent_name):
         board_str = ShogiOutput.make_board_emoji(board)
         message.send(board_str)
 
+
 koma_names = [
     "歩兵?",
     "と金?",
@@ -50,21 +52,26 @@ koma_names = [
     "成?銀将?",
     "金将?",
     "角行?",
-    "馬",
+    "竜?馬",
     "飛車?",
-    "龍",
+    "龍王?",
+    "竜王?",
     "王将?",
     "玉将?",
 ]
 
 koma_names_string_regex = "|".join(koma_names)
 
-@respond_to("^([一二三四五六七八九123456789１２３４５６７８９]{2})?(同)?(" + koma_names_string_regex + ")([上右下左引寄直打]{1,2})?つ?(成)?")
+#@respond_to("^([一二三四五六七八九123456789１２３４５６７８９]{2})?(同)?(" + koma_names_string_regex + ")([上右下左引寄直打]{1,2})?つ?(成)?")
+@respond_to("([1-9１-９一二三四五六七八九]{2}|同)(" + koma_names_string_regex + ")([右左直])?([上引寄])?(成|不成|打)?")
 @channel_info
 @should_exist_shogi
-def koma_move(channel, message, position, dou, koma, sub_position=None, promote=None):
+def koma_move(channel, message, destination, piece, position=None, direction=None, promotion=None):
     movement_str = "".join(
-        [x for x in [position, dou, koma, sub_position, promote] if x is not None])
+        [x for x in [destination, piece, position, direction, promotion] if x is not None])
+#def koma_move(channel, message, position, dou, koma, sub_position=None, promote=None):
+#    movement_str = "".join(
+#        [x for x in [position, dou, koma, sub_position, promote] if x is not None])
 
     try:
         ShogiInput.move(movement_str, channel.channel_id, channel.own_id)
@@ -77,6 +84,7 @@ def koma_move(channel, message, position, dou, koma, sub_position=None, promote=
         board_str = ShogiOutput.make_board_emoji(board)
         message.send(board_str)
 
+
 @respond_to("set (all) mode")
 @channel_info
 @should_exist_shogi
@@ -85,9 +93,10 @@ def set_mode(channel, message, arg):
         ShogiInput.setAllMode(channel.channel_id)
         message.reply("Done! All member can move now!")
 
-@respond_to("今?.*の?.*状態.*を?教.*え?て?")
-@respond_to("now")
-@respond_to("局面.*")
+
+@respond_to("局面")
+@respond_to("盤面?")
+@respond_to("状態")
 @respond_to("board")
 @channel_info
 @should_exist_shogi
@@ -97,13 +106,13 @@ def board_info(channel, message):
     message.send(board_str)
 
 
-@respond_to(".*降参.*")
-@respond_to(".*resign.*")
-@respond_to(".*負けました.*")
-@respond_to(".*まけました.*")
-@respond_to(".*まいりました.*")
-@respond_to(".*参りました.*")
-@respond_to(".*ありません.*")
+@respond_to("降参")
+@respond_to("負けました")
+@respond_to("まけました")
+@respond_to("参りました")
+@respond_to("まいりました")
+@respond_to("ありません")
+@respond_to("resign")
 @channel_info
 @should_exist_shogi
 def resign(channel, message):
@@ -115,6 +124,7 @@ def resign(channel, message):
 
 
 @respond_to("待った")
+@respond_to("まった")
 @channel_info
 @should_exist_shogi
 def matta(channel, message):
@@ -131,8 +141,8 @@ def matta(channel, message):
         message.send(board_str)
 
 
-@respond_to(".*ひふみん[eye, アイ, あい]?")
-@respond_to(".*反転.*")
+@respond_to("ひふみん(?:アイ|あい|eye)")
+@respond_to("反転")
 @channel_info
 @should_exist_shogi
 def hifumin(channel, message):

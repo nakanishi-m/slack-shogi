@@ -21,7 +21,7 @@ def should_exist_shogi(f):
         channel = args[0]
         message = args[1]
         if not ShogiInput.exists(channel.channel_id):
-            message.reply("start withから初めてね")
+            message.reply("start with してくれっ")
             return
 
         f(*args, **kwargs)
